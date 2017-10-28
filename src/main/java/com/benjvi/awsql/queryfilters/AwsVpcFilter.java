@@ -7,6 +7,7 @@ import com.benjvi.awsql.inputtypes.InputAwsVpc;
 import com.benjvi.awsql.types.AwsVpc;
 import com.benjvi.awsql.types.Utils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -20,14 +21,16 @@ public class AwsVpcFilter implements ResourceProvider<AmazonEC2Async,AwsVpc> {
     public List<AwsVpc> getFilteredResources(AmazonEC2Async ec2Client) {
         List<Vpc> vpcs = ec2Client.describeVpcs().getVpcs();
 
-        ContainsFilter<AwsVpc> containsFilter = new ContainsFilter();
-        List<Predicate<AwsVpc>> predicates = containsFilter.buildPredicates(contains);
-        if (contains.getInputTags() != null && !contains.getInputTags().isEmpty())
-            predicates.add(containsFilter.getListPropertyPredicate("tags",
-                    contains.getInputTags().stream()
-                            .map(t -> Utils.copyProperties(t, Tag.class))
-                            .collect(Collectors.toList())));
-
+        List<Predicate<AwsVpc>> predicates = new ArrayList<>();
+        if (contains!=null) {
+            ContainsFilter<AwsVpc> containsFilter = new ContainsFilter();
+            predicates.addAll(containsFilter.buildPredicates(contains));
+            if (contains.getInputTags() != null && !contains.getInputTags().isEmpty())
+                predicates.add(containsFilter.getListPropertyPredicate("tags",
+                        contains.getInputTags().stream()
+                                .map(t -> Utils.copyProperties(t, Tag.class))
+                                .collect(Collectors.toList())));
+        }
         return vpcs.stream()
                 .map(v -> (AwsVpc) Utils.copyProperties(v, AwsVpc.class))
                 .filter(v -> predicates.stream().allMatch(p -> p.test(v))).collect(Collectors.toList());

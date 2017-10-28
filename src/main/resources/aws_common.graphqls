@@ -1,0 +1,14 @@
+
+type AwsTag {
+  key: String
+  value: String
+}
+
+input InputAwsTag {
+    key: String
+    value: String
+}
+
+input AwsAddTagsAction {
+    tags: [InputAwsTag]
+}

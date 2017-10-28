@@ -33,7 +33,9 @@ public class Mutation implements GraphQLMutationResolver {
     public List<AwsEc2Instance> ec2Instances(AwsEc2InstanceFilter filter, AwsAddTagsAction addTags) {
         // get info for running mutation
         List<AwsEc2Instance> instances = awsRepository.ec2Instances(filter);
-        instances.stream().map(i -> i.getInstanceId()).forEach(addTags::perform);
+        if (addTags!=null) {
+            instances.stream().map(i -> i.getInstanceId()).forEach(addTags::perform);
+        }
         // get updated info
         instances = awsRepository.ec2Instances(filter);
         return instances;

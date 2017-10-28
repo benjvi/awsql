@@ -1,0 +1,12 @@
+ type GcpComputeInstance {
+   instanceId: InstanceId
+   generatedId: String
+   networkInterfaces: [String]
+   description: String
+ }
+
+  type InstanceId {
+     instance: String
+     zone: String
+     zoneId: String
+  }

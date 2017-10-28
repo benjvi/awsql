@@ -1,0 +1,25 @@
+type AwsVpc {
+   vpcId: String
+   state: String
+   cidrBlock: String
+   dhcpOptionsId: String
+   tags: [AwsTag]
+   instanceTenancy: String
+   isDefault: Boolean
+   ipv6CidrBlockAssociationSet: [String]
+ }
+
+ input InputAwsVpc {
+    vpcId: String
+    state: String
+    cidrBlock: String
+    dhcpOptionsId: String
+    inputTags: [InputAwsTag]
+    instanceTenancy: String
+    isDefault: Boolean
+    ipv6CidrBlockAssociationSet: [String]
+  }
+
+input AwsVpcFilter {
+   contains: InputAwsVpc
+}

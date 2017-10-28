@@ -30,7 +30,11 @@ public class GraphQLEndpoint extends SimpleGraphQLServlet {
 
     private static GraphQLSchema buildSchema() {
         return SchemaParser.newParser()
-                .files(new String[]{"schema.graphqls"}) //parse the schema file created earlier
+                .files(new String[]{
+                        "schema.graphqls",
+                        "aws_common.graphqls","aws_ec2_instance.graphqls","aws_ec2_vpc.graphqls",
+                        "gcp_compute_instance.graphqls"
+                }) //parse the schema file created earlier
                 .resolvers(new Query(awsRepository, gcpRepository), new Mutation(awsRepository))
                 .build()
                 .makeExecutableSchema();
