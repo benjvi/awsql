@@ -5,7 +5,8 @@ import com.amazonaws.services.ec2.AmazonEC2Async;
 import com.amazonaws.services.ec2.AmazonEC2AsyncClientBuilder;
 import com.amazonaws.services.ec2.model.CreateTagsRequest;
 import com.amazonaws.services.ec2.model.Tag;
-import com.benjvi.awsql.inputtypes.TagInput;
+import com.benjvi.awsql.inputtypes.InputAwsTag;
+import com.benjvi.awsql.types.Utils;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.ArrayList;
@@ -25,17 +26,17 @@ public class AwsAddTagsAction {
     }
 
     @JsonProperty("tags")
-    public List<TagInput> getTags() {
-        return tags.stream().map(t -> new TagInput(t.getKey(), t.getValue())).collect(Collectors.toList());
+    public List<InputAwsTag> getTags() {
+        return tags.stream().map(t -> (InputAwsTag)Utils.copyProperties(t, InputAwsTag.class)).collect(Collectors.toList());
     }
 
-    public void setTags(List<TagInput> tags) {
-        this.tags = tags.stream().map(t -> new Tag(t.getKey(), t.getValue())).collect(Collectors.toList());
+    public void setTags(List<InputAwsTag> tags) {
+        this.tags = tags.stream().collect(Collectors.toList());
     }
 
-    public AwsAddTagsAction(List<TagInput> tags) {
+    public AwsAddTagsAction(List<InputAwsTag> tags) {
         this.client = AmazonEC2AsyncClientBuilder.defaultClient();
-        this.tags = tags.stream().map(t -> new Tag(t.getKey(), t.getValue())).collect(Collectors.toList());
+        this.tags = tags.stream().collect(Collectors.toList());
     }
 
     public void perform(String resourceId) {

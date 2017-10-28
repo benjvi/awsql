@@ -3,11 +3,10 @@ package com.benjvi.awsql.queryfilters;
 import com.amazonaws.services.ec2.AmazonEC2Async;
 import com.amazonaws.services.ec2.model.Tag;
 import com.amazonaws.services.ec2.model.Vpc;
-import com.google.common.base.Strings;
-import com.benjvi.awsql.inputtypes.TagInput;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.benjvi.awsql.inputtypes.InputAwsVpc;
+import com.benjvi.awsql.types.AwsVpc;
+import com.benjvi.awsql.types.Utils;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -15,81 +14,36 @@ import java.util.stream.Collectors;
 /**
  * Created by benjamin on 20/09/2017.
  */
-public class AwsVpcFilter implements AwsEc2Filter<Vpc> {
-
-    private String idContains;
-    private String cidrContains;
-    private List<TagInput> tagsContains;
-
-    @JsonProperty("idContains") //the name must match the schema
-    public String getVpcIdContains() {
-        return idContains;
-    }
-
-    public void setVpcIdContains(String idContains) {
-        this.idContains = idContains;
-    }
-
-    @JsonProperty("cidrContains")
-    public String getCidrBlockContains() {
-        return cidrContains;
-    }
-
-    public void setCidrBlockContains(String cidrContains) {
-        this.cidrContains = cidrContains;
-    }
-
-    @JsonProperty("tagsContains")
-    public List<TagInput> getTagsContains() { return tagsContains; }
-
-    public void setTagsContains(List<TagInput> tagsContains) { this.tagsContains = tagsContains; }
-
-    public Boolean testVpcIdContains(Vpc vpc) {
-        if (idContains != null) {
-            return vpc.getVpcId().contains(idContains);
-        } else {
-            return true;
-        }
-    }
-
-    public Boolean testCidrBlockContains(Vpc vpc) {
-        if (cidrContains != null) {
-            return vpc.getCidrBlock().contains(cidrContains);
-        } else {
-            return true;
-        }
-    }
-
-    public Boolean testTagsContains(Vpc vpc) {
-        if (tagsContains != null) {
-            return vpc.getTags().containsAll(tagsContains.stream().map(
-                    t -> new Tag(t.getKey(), t.getValue())).collect(Collectors.toList()));
-        } else {
-            return true;
-        }
-    }
+public class AwsVpcFilter implements ResourceProvider<AmazonEC2Async,AwsVpc> {
 
     @Override
-    public List<Predicate<Vpc>> buildPredicates() {
-        List<Predicate<Vpc>> predicates = new ArrayList<>();
-        if (!Strings.isNullOrEmpty(this.getCidrBlockContains())) {
-            predicates.add(this::testCidrBlockContains);
-        }
-        if (!Strings.isNullOrEmpty(this.getVpcIdContains())) {
-            predicates.add(this::testVpcIdContains);
-        }
-        if (this.getTagsContains() != null && this.getTagsContains().size() > 0) {
-            predicates.add(this::testTagsContains);
-        }
-        return predicates;
-    }
-
-    @Override
-    public List<Vpc> applyPredicates(AmazonEC2Async ec2Client, List<Predicate<Vpc>> predicates) {
+    public List<AwsVpc> getFilteredResources(AmazonEC2Async ec2Client) {
         List<Vpc> vpcs = ec2Client.describeVpcs().getVpcs();
 
-        vpcs = vpcs.stream().filter(v -> predicates.stream().allMatch(p -> p.test(v))).collect(Collectors.toList());
-        return vpcs;
+        ContainsFilter<AwsVpc> containsFilter = new ContainsFilter();
+        List<Predicate<AwsVpc>> predicates = containsFilter.buildPredicates(contains);
+        if (contains.getInputTags() != null && !contains.getInputTags().isEmpty())
+            predicates.add(containsFilter.getListPropertyPredicate("tags",
+                    contains.getInputTags().stream()
+                            .map(t -> Utils.copyProperties(t, Tag.class))
+                            .collect(Collectors.toList())));
+
+        return vpcs.stream()
+                .map(v -> (AwsVpc) Utils.copyProperties(v, AwsVpc.class))
+                .filter(v -> predicates.stream().allMatch(p -> p.test(v))).collect(Collectors.toList());
+    }
+
+    private InputAwsVpc contains;
+    //private InputAwsVpc equals;
+    //private InputAwsVpc notEquals;
+
+
+    public InputAwsVpc getContains() {
+        return contains;
+    }
+
+    public void setContains(InputAwsVpc contains) {
+        this.contains = contains;
     }
 
 }

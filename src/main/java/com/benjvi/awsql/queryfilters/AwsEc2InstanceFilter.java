@@ -3,9 +3,9 @@ package com.benjvi.awsql.queryfilters;
 import com.amazonaws.services.ec2.AmazonEC2Async;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Tag;
-import com.benjvi.awsql.inputtypes.TagInput;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Strings;
+import com.benjvi.awsql.inputtypes.InputAwsEc2Instance;
+import com.benjvi.awsql.types.AwsEc2Instance;
+import com.benjvi.awsql.types.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,62 +15,37 @@ import java.util.stream.Collectors;
 /**
  * Created by benjamin on 20/09/2017.
  */
-public class AwsEc2InstanceFilter implements AwsEc2Filter<Instance> {
+public class AwsEc2InstanceFilter implements ResourceProvider<AmazonEC2Async, AwsEc2Instance> {
 
-    private String idContains;
-    private List<TagInput> tagsContains;
+    private InputAwsEc2Instance contains;
 
-    @JsonProperty("idContains") //the name must match the schema
-    public String getInstanceIdContains() {
-        return idContains;
+    public InputAwsEc2Instance getContains() {
+        return contains;
     }
 
-    public void setInstanceIdContains(String idContains) {
-        this.idContains = idContains;
-    }
-
-    @JsonProperty("tagsContains")
-    public List<TagInput> getTagsContains() { return tagsContains; }
-
-    public void setTagsContains(List<TagInput> tagsContains) { this.tagsContains = tagsContains; }
-
-    public Boolean testInstanceIdContains(Instance instance) {
-        if (idContains != null) {
-            return instance.getInstanceId().contains(idContains);
-        } else {
-            return true;
-        }
-    }
-
-    public Boolean testTagsContains(Instance instance) {
-        if (tagsContains != null) {
-            return instance.getTags().containsAll(tagsContains.stream().map(
-                    t -> new Tag(t.getKey(), t.getValue())).collect(Collectors.toList()));
-        } else {
-            return true;
-        }
+    public void setContains(InputAwsEc2Instance contains) {
+        this.contains = contains;
     }
 
     @Override
-    public List<Predicate<Instance>> buildPredicates() {
-        List<Predicate<Instance>> predicates = new ArrayList<>();
-
-        if (!Strings.isNullOrEmpty(this.getInstanceIdContains())) {
-            predicates.add(this::testInstanceIdContains);
-        }
-        if (this.getTagsContains() != null && this.getTagsContains().size() > 0) {
-            predicates.add(this::testTagsContains);
-        }
-        return predicates;
-    }
-
-    @Override
-    public List<Instance> applyPredicates(AmazonEC2Async ec2Client, List<Predicate<Instance>> predicates) {
+    public List<AwsEc2Instance> getFilteredResources(AmazonEC2Async ec2Client) {
         List<Instance> instances = ec2Client.describeInstances().getReservations()
                 .stream().flatMap(r -> r.getInstances().stream()).collect(Collectors.toList());
 
-        instances = instances.stream().filter(i -> predicates.stream().allMatch(p -> p.test(i))).collect(Collectors.toList());
-        return instances;
-    }
+        List<Predicate<AwsEc2Instance>> predicates = new ArrayList<>();
+        if (contains!=null) {
+            ContainsFilter<AwsEc2Instance> containsFilter = new ContainsFilter();
+            predicates.addAll(containsFilter.buildPredicates(contains));
+            if (contains.getInputTags() != null && !contains.getInputTags().isEmpty())
+                predicates.add(containsFilter.getListPropertyPredicate("tags",
+                        contains.getInputTags().stream()
+                                .map(t -> Utils.copyProperties(t, Tag.class))
+                                .collect(Collectors.toList())));
+        }
 
+        return instances.stream()
+                .map(i -> (AwsEc2Instance)Utils.copyProperties(i, AwsEc2Instance.class))
+                .filter(i -> predicates.stream().allMatch(p -> p.test(i)))
+                .collect(Collectors.toList());
+    }
 }

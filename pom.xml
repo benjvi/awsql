@@ -11,17 +11,17 @@
     <dependency>
       <groupId>com.graphql-java</groupId>
       <artifactId>graphql-java</artifactId>
-      <version>3.0.0</version>
+      <version>5.0</version>
     </dependency>
     <dependency>
       <groupId>com.graphql-java</groupId>
       <artifactId>graphql-java-tools</artifactId>
-      <version>3.2.0</version>
+      <version>4.1.2</version>
     </dependency>
     <dependency>
       <groupId>com.graphql-java</groupId>
       <artifactId>graphql-java-servlet</artifactId>
-      <version>4.0.0</version>
+      <version>4.4.0</version>
     </dependency>
     <dependency>
       <groupId>javax.servlet</groupId>
@@ -38,6 +38,16 @@
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk</artifactId>
       <version>1.11.106</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud</artifactId>
+      <version>0.26.0-alpha</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-beanutils</groupId>
+      <artifactId>commons-beanutils</artifactId>
+      <version>1.9.3</version>
     </dependency>
   </dependencies>
   <build>

@@ -1,36 +1,45 @@
 
-type Tag {
+type AwsTag {
   key: String
   value: String
 }
 
-input TagInput {
+input InputAwsTag {
     key: String
     value: String
 }
 
 input AwsAddTagsAction {
-    tags: [TagInput]
+    tags: [InputAwsTag]
 }
 
-type Vpc {
+type AwsVpc {
    vpcId: String
    state: String
    cidrBlock: String
    dhcpOptionsId: String
-   tags: [Tag]
+   tags: [AwsTag]
    instanceTenancy: String
    isDefault: Boolean
    ipv6CidrBlockAssociationSet: [String]
  }
 
- input AwsVpcFilter {
-   idContains: String
-   cidrContains: String
-   tagsContains: [TagInput]
- }
+ input InputAwsVpc {
+    vpcId: String
+    state: String
+    cidrBlock: String
+    dhcpOptionsId: String
+    inputTags: [InputAwsTag]
+    instanceTenancy: String
+    isDefault: Boolean
+    ipv6CidrBlockAssociationSet: [String]
+  }
 
- type Instance {
+input AwsVpcFilter {
+   contains: InputAwsVpc
+}
+
+ type AwsEc2Instance {
    instanceId: String
    imageId: String
    state: String
@@ -68,22 +77,76 @@ type Vpc {
    securityGroups: [String]
    networkInterfaces: [String]
    iamInstanceProfile: String
-   tags: [Tag]
+   tags: [AwsTag]
  }
 
- input AwsEc2InstanceFilter {
-   idContains: String
-   tagsContains: [TagInput]
+input InputAwsEc2Instance {
+    instanceId: String
+    imageId: String
+    state: String
+    privateDnsName: String
+    publicDnsName: String
+    stateTransitionReason: String
+    keyName: String
+    amiLaunchIndex: Int
+    instanceType: String
+    kernelId: String
+    ramdiskId: String
+    platform: String
+    subnetId: String
+    vpcId: String
+    privateIpAddress: String
+    publicIpAddress: String
+    architecture: String
+    rootDeviceType: String
+    rootDeviceName: String
+    virtualizationType: String
+    instanceLifecycle: String
+    spotInstanceRequestId: String
+    clientToken: String
+    sourceDestCheck: Boolean
+    hypervisor: String
+    ebsOptimized: Boolean
+    sriovNetSupport: String
+    enaSupport: Boolean
+    productCodes: [String]
+    launchTime: String
+    placement: String
+    monitoring: String
+    stateReason: String
+    blockDeviceMappings: [String]
+    securityGroups: [String]
+    networkInterfaces: [String]
+    iamInstanceProfile: String
+    inputTags: [InputAwsTag]
+}
+
+input AwsEc2InstanceFilter {
+    contains: InputAwsEc2Instance
+}
+
+ type GcpComputeInstance {
+   instanceId: InstanceId
+   generatedId: String
+   networkInterfaces: [String]
+   description: String
+ }
+
+ type InstanceId {
+    instance: String
+    zone: String
+    zoneId: String
  }
 
  type Query {
-   vpcs(filter: AwsVpcFilter): [Vpc]
-   ec2Instances(filter: AwsEc2InstanceFilter): [Instance]
+   awsVpcs(filter: AwsVpcFilter): [AwsVpc]
+   awsEc2Instances(filter: AwsEc2InstanceFilter): [AwsEc2Instance]
+   gcpInstances: [GcpComputeInstance]
  }
 
  type Mutation {
-   vpcs(filter: AwsVpcFilter, addTags: AwsAddTagsAction): [Vpc]
-   ec2Instances(filter: AwsEc2InstanceFilter, addTags: AwsAddTagsAction): [Instance]
+   vpcs(filter: AwsVpcFilter, addTags: AwsAddTagsAction): [AwsVpc]
+   ec2Instances(filter: AwsEc2InstanceFilter, addTags: AwsAddTagsAction): [AwsEc2Instance]
  }
 
  schema {

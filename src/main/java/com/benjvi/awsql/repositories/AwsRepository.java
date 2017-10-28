@@ -2,10 +2,10 @@ package com.benjvi.awsql.repositories;
 
 import com.amazonaws.services.ec2.AmazonEC2Async;
 import com.amazonaws.services.ec2.AmazonEC2AsyncClientBuilder;
-import com.amazonaws.services.ec2.model.Instance;
-import com.amazonaws.services.ec2.model.Vpc;
 import com.benjvi.awsql.queryfilters.AwsEc2InstanceFilter;
 import com.benjvi.awsql.queryfilters.AwsVpcFilter;
+import com.benjvi.awsql.types.AwsEc2Instance;
+import com.benjvi.awsql.types.AwsVpc;
 
 import java.util.List;
 import java.util.function.Predicate;
@@ -21,18 +21,22 @@ public class AwsRepository {
         this.ec2Client = AmazonEC2AsyncClientBuilder.defaultClient();
     }
 
-    public List<Vpc> vpcs(AwsVpcFilter filter) {
-        List<Predicate<Vpc>> validVpcPredicates = filter.buildPredicates();
+    public List<AwsVpc> vpcs(AwsVpcFilter filter) {
+        if (filter == null) {
+            filter = new AwsVpcFilter();
+        }
 
-        List<Vpc> filteredVpcs = filter.applyPredicates(this.ec2Client, validVpcPredicates);
+        List<AwsVpc> filteredVpcs = filter.getFilteredResources(this.ec2Client);
 
         return filteredVpcs;
     }
 
-    public List<Instance> ec2Instances(AwsEc2InstanceFilter filter) {
-        List<Predicate<Instance>> validInstancePredicates = filter.buildPredicates();
+    public List<AwsEc2Instance> ec2Instances(AwsEc2InstanceFilter filter) {
+        if (filter == null) {
+            filter = new AwsEc2InstanceFilter();
+        }
 
-        List<Instance> filteredInstances = filter.applyPredicates(this.ec2Client, validInstancePredicates);
+        List<AwsEc2Instance> filteredInstances = filter.getFilteredResources(this.ec2Client);
 
         return filteredInstances;
     }
